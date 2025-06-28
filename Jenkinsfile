@@ -21,8 +21,17 @@ pipeline {
                     // Извличане на кода от Git
                     checkout scm
                     
+                    // Решаване на Git ownership проблема
+                    sh '''
+                        # Конфигуриране на Git за безопасна директория
+                        git config --global --add safe.directory /var/jenkins_home/workspace/${JOB_NAME}
+                        
+                        # Проверка на текущия branch
+                        git rev-parse --abbrev-ref HEAD
+                    '''
+                    
                     // Проверка дали сме в main branch
-                    def currentBranch = env.BRANCH_NAME ?: sh(
+                    def currentBranch = sh(
                         script: 'git rev-parse --abbrev-ref HEAD',
                         returnStdout: true
                     ).trim()
