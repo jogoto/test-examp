@@ -47,9 +47,8 @@ pipeline {
             }
             post {
                 always {
-                    // Архивиране на build артефакти
+                    // Архивиране на build артефакти (само .dll файлове)
                     archiveArtifacts artifacts: '**/bin/Release/**/*.dll', fingerprint: true
-                    archiveArtifacts artifacts: '**/bin/Release/**/*.exe', fingerprint: true
                 }
             }
         }
