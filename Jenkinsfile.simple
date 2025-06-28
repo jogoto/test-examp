@@ -4,8 +4,8 @@ pipeline {
     environment {
         DOTNET_VERSION = '6.0'
         SOLUTION_FILE = 'HouseRentingSystem.sln'
-        TEST_RESULTS_DIR = 'test-results'
         COVERAGE_DIR = 'coverage'
+        TEST_RESULTS_DIR = 'test-results'
     }
     
     stages {
@@ -14,20 +14,7 @@ pipeline {
                 script {
                     // Извличане на кода от Git
                     checkout scm
-                    
-                    // Проверка на .NET версията
-                    sh 'dotnet --version'
-                    
-                    // Проверка дали сме в main branch
-                    def currentBranch = env.BRANCH_NAME ?: sh(
-                        script: 'git rev-parse --abbrev-ref HEAD',
-                        returnStdout: true
-                    ).trim()
-                    
-                    if (currentBranch != 'main') {
-                        echo "Текущият branch е: ${currentBranch}"
-                        echo "Pipeline ще продължи, но се уверете, че сте в main branch"
-                    }
+                    echo '✅ Кодът е извлечен успешно'
                 }
             }
         }
@@ -94,9 +81,6 @@ pipeline {
         always {
             script {
                 echo 'Pipeline завърши с резултат: ' + currentBuild.result
-                
-                // Изчистване на workspace
-                cleanWs()
             }
         }
         success {

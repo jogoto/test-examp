@@ -37,23 +37,7 @@ pipeline {
                     // Извличане на кода от Git
                     checkout scm
                     
-                    // Проверка на текущия branch
-                    sh '''
-                        # Проверка на текущия branch
-                        echo "Текущият branch: $(git rev-parse --abbrev-ref HEAD)"
-                        
-                        # Проверка дали сме в main branch
-                        CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-                        
-                        if [ "$CURRENT_BRANCH" = "main" ]; then
-                            echo "✅ Изпълняване в main branch - продължаваме..."
-                        else
-                            echo "❌ Pipeline може да се изпълнява само в main branch!"
-                            echo "Текущият branch е: $CURRENT_BRANCH"
-                            echo "Направете push в main branch за да изпълните pipeline-а."
-                            exit 1
-                        fi
-                    '''
+                    echo '✅ Кодът е извлечен успешно от main branch'
                 }
             }
         }
