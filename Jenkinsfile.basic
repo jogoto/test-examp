@@ -26,12 +26,7 @@ pipeline {
         
         stage('Test') {
             steps {
-                sh '${DOTNET_PATH} test HouseRentingSystem.sln --configuration Release --no-build --logger "trx;LogFileName=test-results.trx"'
-            }
-            post {
-                always {
-                    junit testResults: '**/*.trx'
-                }
+                sh '${DOTNET_PATH} test HouseRentingSystem.sln --configuration Release --no-build'
             }
         }
     }
