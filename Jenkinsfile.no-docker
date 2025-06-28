@@ -14,29 +14,22 @@ pipeline {
                 script {
                     // Извличане на кода от Git
                     checkout scm
-                    
-                    // Решаване на проблема с правата
-                    sh '''
-                        # Даване на права на workspace директорията
-                        chmod -R 755 .
-                        
-                        # Проверка на правата
-                        ls -la
-                        
-                        echo "✅ Кодът е извлечен успешно"
-                    '''
+                    echo "✅ Кодът е извлечен успешно"
                 }
             }
         }
         
-        stage('Restore Dependencies') {
+        stage('Clean and Restore') {
             steps {
                 script {
-                    echo 'Възстановяване на NuGet зависимости...'
+                    echo 'Очистване и възстановяване на зависимости...'
                     sh '''
-                        # Очистване на obj и bin директориите
+                        # Очистване на obj и bin директориите (ако съществуват)
                         find . -name "obj" -type d -exec rm -rf {} + 2>/dev/null || true
                         find . -name "bin" -type d -exec rm -rf {} + 2>/dev/null || true
+                        
+                        # Очистване на test-results и coverage директориите
+                        rm -rf test-results coverage 2>/dev/null || true
                         
                         # Възстановяване на зависимостите
                         dotnet restore ${SOLUTION_FILE}
