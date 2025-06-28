@@ -18,20 +18,37 @@ pipeline {
                     // Проверка на .NET версията
                     sh 'dotnet --version'
                     
-                    // Проверка на текущия branch
-                    def currentBranch = sh(
-                        script: 'git rev-parse --abbrev-ref HEAD',
-                        returnStdout: true
-                    ).trim()
-                    
-                    echo "Текущият branch е: ${currentBranch}"
-                    
-                    // Проверка дали сме в main branch
-                    if (currentBranch != 'main') {
-                        error "❌ Pipeline може да се изпълнява само в main branch! Текущият branch е: ${currentBranch}"
-                    }
-                    
-                    echo "✅ Изпълняване в main branch - продължаваме..."
+                    // Проверка на текущия branch и настройване на main
+                    sh '''
+                        # Проверка на текущия branch
+                        echo "Текущият branch преди настройка: $(git rev-parse --abbrev-ref HEAD)"
+                        
+                        # Проверка дали main branch съществува
+                        if git show-ref --verify --quiet refs/remotes/origin/main; then
+                            echo "Main branch съществува в remote"
+                            
+                            # Проверка дали сме в detached HEAD state
+                            if [ "$(git rev-parse --abbrev-ref HEAD)" = "HEAD" ]; then
+                                echo "В detached HEAD state - превключваме към main"
+                                git checkout -b main origin/main
+                            fi
+                            
+                            # Проверка на текущия branch след настройка
+                            CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+                            echo "Текущият branch след настройка: $CURRENT_BRANCH"
+                            
+                            # Проверка дали сме в main branch
+                            if [ "$CURRENT_BRANCH" = "main" ]; then
+                                echo "✅ Изпълняване в main branch - продължаваме..."
+                            else
+                                echo "❌ Не сме в main branch! Текущият branch е: $CURRENT_BRANCH"
+                                exit 1
+                            fi
+                        else
+                            echo "❌ Main branch не съществува в remote!"
+                            exit 1
+                        fi
+                    '''
                 }
             }
         }
