@@ -18,16 +18,20 @@ pipeline {
                     // Проверка на .NET версията
                     sh 'dotnet --version'
                     
-                    // Проверка дали сме в main branch
-                    def currentBranch = env.BRANCH_NAME ?: sh(
+                    // Проверка на текущия branch
+                    def currentBranch = sh(
                         script: 'git rev-parse --abbrev-ref HEAD',
                         returnStdout: true
                     ).trim()
                     
+                    echo "Текущият branch е: ${currentBranch}"
+                    
+                    // Проверка дали сме в main branch
                     if (currentBranch != 'main') {
-                        echo "Текущият branch е: ${currentBranch}"
-                        echo "Pipeline ще продължи, но се уверете, че сте в main branch"
+                        error "❌ Pipeline може да се изпълнява само в main branch! Текущият branch е: ${currentBranch}"
                     }
+                    
+                    echo "✅ Изпълняване в main branch - продължаваме..."
                 }
             }
         }

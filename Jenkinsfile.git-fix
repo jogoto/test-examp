@@ -45,10 +45,12 @@ pipeline {
                     
                     echo "Текущият branch е: ${currentBranch}"
                     
+                    // Проверка дали сме в main branch
                     if (currentBranch != 'main') {
-                        echo "⚠️ Внимание: Не сте в main branch!"
-                        echo "Pipeline ще продължи, но се уверете, че сте в правилния branch"
+                        error "❌ Pipeline може да се изпълнява само в main branch! Текущият branch е: ${currentBranch}"
                     }
+                    
+                    echo "✅ Изпълняване в main branch - продължаваме..."
                 }
             }
         }
@@ -67,13 +69,6 @@ pipeline {
                 script {
                     echo 'Компилиране на решението...'
                     sh 'dotnet build ${SOLUTION_FILE} --configuration Release --no-restore'
-                }
-            }
-            post {
-                always {
-                    // Архивиране на build артефакти
-                    archiveArtifacts artifacts: '**/bin/Release/**/*.dll', fingerprint: true
-                    archiveArtifacts artifacts: '**/bin/Release/**/*.exe', fingerprint: true
                 }
             }
         }
