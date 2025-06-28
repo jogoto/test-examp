@@ -72,15 +72,7 @@ pipeline {
                     '''
                 }
             }
-            post {
-                always {
-                    // Архивиране на test резултати
-                    junit testResults: '${TEST_RESULTS_DIR}/**/*.trx'
-                    
-                    // Архивиране на coverage резултати (те се генерират в TestResults директория)
-                    archiveArtifacts artifacts: 'TestResults/**/*', fingerprint: true
-                }
-            }
+            
         }
     }
     

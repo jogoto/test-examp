@@ -1,6 +1,10 @@
 pipeline {
     agent any
     
+    environment {
+        DOTNET_PATH = '/var/lib/jenkins/.dotnet/dotnet'
+    }
+    
     stages {
         stage('Checkout') {
             steps {
@@ -10,23 +14,23 @@ pipeline {
         
         stage('Restore') {
             steps {
-                sh 'dotnet restore HouseRentingSystem.sln'
+                sh '${DOTNET_PATH} restore HouseRentingSystem.sln'
             }
         }
         
         stage('Build') {
             steps {
-                sh 'dotnet build HouseRentingSystem.sln --configuration Release --no-restore'
+                sh '${DOTNET_PATH} build HouseRentingSystem.sln --configuration Release --no-restore'
             }
         }
         
         stage('Test') {
             steps {
-                sh 'dotnet test HouseRentingSystem.sln --configuration Release --no-build --logger "trx;LogFileName=test-results.trx"'
+                sh '${DOTNET_PATH} test HouseRentingSystem.sln --configuration Release --no-build --logger "trx;LogFileName=test-results.trx"'
             }
             post {
                 always {
-                    publishTestResults testResultsPattern: '**/*.trx'
+                    junit testResults: '**/*.trx'
                 }
             }
         }
