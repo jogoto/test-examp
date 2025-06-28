@@ -4,7 +4,6 @@ pipeline {
     environment {
         DOTNET_VERSION = '6.0'
         SOLUTION_FILE = 'HouseRentingSystem.sln'
-        COVERAGE_DIR = 'coverage'
         TEST_RESULTS_DIR = 'test-results'
     }
     
@@ -28,8 +27,8 @@ pipeline {
                         find . -name "obj" -type d -exec rm -rf {} + 2>/dev/null || true
                         find . -name "bin" -type d -exec rm -rf {} + 2>/dev/null || true
                         
-                        # Очистване на test-results и coverage директориите
-                        rm -rf test-results coverage 2>/dev/null || true
+                        # Очистване на test-results и TestResults директориите
+                        rm -rf test-results TestResults 2>/dev/null || true
                         
                         # Възстановяване на зависимостите
                         dotnet restore ${SOLUTION_FILE}
@@ -60,7 +59,6 @@ pipeline {
                     
                     // Създаване на директории за резултати
                     sh 'mkdir -p ${TEST_RESULTS_DIR}'
-                    sh 'mkdir -p ${COVERAGE_DIR}'
                     
                     // Изпълняване на всички тестове с coverage
                     sh '''
@@ -69,8 +67,7 @@ pipeline {
                             --no-build \
                             --logger "trx;LogFileName=test-results.trx" \
                             --results-directory ${TEST_RESULTS_DIR} \
-                            --collect:"XPlat Code Coverage" \
-                            --results-directory ${COVERAGE_DIR}
+                            --collect "XPlat Code Coverage"
                     '''
                 }
             }
@@ -79,8 +76,8 @@ pipeline {
                     // Архивиране на test резултати
                     publishTestResults testResultsPattern: '${TEST_RESULTS_DIR}/**/*.trx'
                     
-                    // Архивиране на coverage резултати
-                    archiveArtifacts artifacts: '${COVERAGE_DIR}/**/*', fingerprint: true
+                    // Архивиране на coverage резултати (те се генерират в TestResults директория)
+                    archiveArtifacts artifacts: 'TestResults/**/*', fingerprint: true
                 }
             }
         }
