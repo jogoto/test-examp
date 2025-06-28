@@ -21,37 +21,23 @@ pipeline {
                     // Извличане на кода от Git
                     checkout scm
                     
-                    // Решаване на Git ownership проблема и настройване на main branch
+                    // Решаване на Git ownership проблема и проверка на main branch
                     sh '''
                         # Конфигуриране на Git за безопасна директория
                         git config --global --add safe.directory /var/jenkins_home/workspace/${JOB_NAME}
                         
                         # Проверка на текущия branch
-                        echo "Текущият branch преди настройка: $(git rev-parse --abbrev-ref HEAD)"
+                        echo "Текущият branch: $(git rev-parse --abbrev-ref HEAD)"
                         
-                        # Проверка дали main branch съществува
-                        if git show-ref --verify --quiet refs/remotes/origin/main; then
-                            echo "Main branch съществува в remote"
-                            
-                            # Проверка дали сме в detached HEAD state
-                            if [ "$(git rev-parse --abbrev-ref HEAD)" = "HEAD" ]; then
-                                echo "В detached HEAD state - превключваме към main"
-                                git checkout -b main origin/main
-                            fi
-                            
-                            # Проверка на текущия branch след настройка
-                            CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-                            echo "Текущият branch след настройка: $CURRENT_BRANCH"
-                            
-                            # Проверка дали сме в main branch
-                            if [ "$CURRENT_BRANCH" = "main" ]; then
-                                echo "✅ Изпълняване в main branch - продължаваме..."
-                            else
-                                echo "❌ Не сме в main branch! Текущият branch е: $CURRENT_BRANCH"
-                                exit 1
-                            fi
+                        # Проверка дали сме в main branch
+                        CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+                        
+                        if [ "$CURRENT_BRANCH" = "main" ]; then
+                            echo "✅ Изпълняване в main branch - продължаваме..."
                         else
-                            echo "❌ Main branch не съществува в remote!"
+                            echo "❌ Pipeline може да се изпълнява само в main branch!"
+                            echo "Текущият branch е: $CURRENT_BRANCH"
+                            echo "Направете push в main branch за да изпълните pipeline-а."
                             exit 1
                         fi
                     '''
