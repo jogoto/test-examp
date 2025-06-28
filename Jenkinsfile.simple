@@ -14,7 +14,17 @@ pipeline {
                 script {
                     // Извличане на кода от Git
                     checkout scm
-                    echo '✅ Кодът е извлечен успешно'
+                    
+                    // Решаване на проблема с правата
+                    sh '''
+                        # Даване на права на workspace директорията
+                        chmod -R 755 .
+                        
+                        # Проверка на правата
+                        ls -la
+                        
+                        echo "✅ Кодът е извлечен успешно"
+                    '''
                 }
             }
         }
@@ -23,7 +33,14 @@ pipeline {
             steps {
                 script {
                     echo 'Възстановяване на NuGet зависимости...'
-                    sh 'dotnet restore ${SOLUTION_FILE}'
+                    sh '''
+                        # Очистване на obj и bin директориите
+                        find . -name "obj" -type d -exec rm -rf {} + 2>/dev/null || true
+                        find . -name "bin" -type d -exec rm -rf {} + 2>/dev/null || true
+                        
+                        # Възстановяване на зависимостите
+                        dotnet restore ${SOLUTION_FILE}
+                    '''
                 }
             }
         }

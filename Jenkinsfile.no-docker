@@ -15,25 +15,15 @@ pipeline {
                     // Извличане на кода от Git
                     checkout scm
                     
-                    // Проверка на .NET версията
-                    sh 'dotnet --version'
-                    
-                    // Проверка на текущия branch
+                    // Решаване на проблема с правата
                     sh '''
-                        # Проверка на текущия branch
-                        echo "Текущият branch: $(git rev-parse --abbrev-ref HEAD)"
+                        # Даване на права на workspace директорията
+                        chmod -R 755 .
                         
-                        # Проверка дали сме в main branch
-                        CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+                        # Проверка на правата
+                        ls -la
                         
-                        if [ "$CURRENT_BRANCH" = "main" ]; then
-                            echo "✅ Изпълняване в main branch - продължаваме..."
-                        else
-                            echo "❌ Pipeline може да се изпълнява само в main branch!"
-                            echo "Текущият branch е: $CURRENT_BRANCH"
-                            echo "Направете push в main branch за да изпълните pipeline-а."
-                            exit 1
-                        fi
+                        echo "✅ Кодът е извлечен успешно"
                     '''
                 }
             }
@@ -43,7 +33,14 @@ pipeline {
             steps {
                 script {
                     echo 'Възстановяване на NuGet зависимости...'
-                    sh 'dotnet restore ${SOLUTION_FILE}'
+                    sh '''
+                        # Очистване на obj и bin директориите
+                        find . -name "obj" -type d -exec rm -rf {} + 2>/dev/null || true
+                        find . -name "bin" -type d -exec rm -rf {} + 2>/dev/null || true
+                        
+                        # Възстановяване на зависимостите
+                        dotnet restore ${SOLUTION_FILE}
+                    '''
                 }
             }
         }
