@@ -1,0 +1,40 @@
+pipeline {
+    agent any
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+        
+        stage('Restore') {
+            steps {
+                sh 'dotnet restore HouseRentingSystem.sln'
+            }
+        }
+        
+        stage('Build') {
+            steps {
+                sh 'dotnet build HouseRentingSystem.sln --configuration Release --no-restore'
+            }
+        }
+        
+        stage('Test') {
+            steps {
+                sh 'dotnet test HouseRentingSystem.sln --configuration Release --no-build --logger "trx;LogFileName=test-results.trx"'
+            }
+            post {
+                always {
+                    publishTestResults testResultsPattern: '**/*.trx'
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            cleanWs()
+        }
+    }
+} 

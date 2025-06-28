@@ -1,0 +1,119 @@
+pipeline {
+    agent any
+    
+    environment {
+        DOTNET_VERSION = '6.0'
+        SOLUTION_FILE = 'HouseRentingSystem.sln'
+        COVERAGE_DIR = 'coverage'
+        TEST_RESULTS_DIR = 'test-results'
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                script {
+                    // Извличане на кода от Git
+                    checkout scm
+                    
+                    // Проверка на .NET версията
+                    sh 'dotnet --version'
+                    
+                    // Проверка дали сме в main branch
+                    def currentBranch = env.BRANCH_NAME ?: sh(
+                        script: 'git rev-parse --abbrev-ref HEAD',
+                        returnStdout: true
+                    ).trim()
+                    
+                    if (currentBranch != 'main') {
+                        echo "Текущият branch е: ${currentBranch}"
+                        echo "Pipeline ще продължи, но се уверете, че сте в main branch"
+                    }
+                }
+            }
+        }
+        
+        stage('Restore Dependencies') {
+            steps {
+                script {
+                    echo 'Възстановяване на NuGet зависимости...'
+                    sh 'dotnet restore ${SOLUTION_FILE}'
+                }
+            }
+        }
+        
+        stage('Build') {
+            steps {
+                script {
+                    echo 'Компилиране на решението...'
+                    sh 'dotnet build ${SOLUTION_FILE} --configuration Release --no-restore'
+                }
+            }
+            post {
+                always {
+                    // Архивиране на build артефакти
+                    archiveArtifacts artifacts: '**/bin/Release/**/*.dll', fingerprint: true
+                    archiveArtifacts artifacts: '**/bin/Release/**/*.exe', fingerprint: true
+                }
+            }
+        }
+        
+        stage('Run All Tests') {
+            steps {
+                script {
+                    echo 'Изпълняване на всички тестове...'
+                    
+                    // Създаване на директории за резултати
+                    sh 'mkdir -p ${TEST_RESULTS_DIR}'
+                    sh 'mkdir -p ${COVERAGE_DIR}'
+                    
+                    // Изпълняване на всички тестове с coverage
+                    sh '''
+                        dotnet test ${SOLUTION_FILE} \
+                            --configuration Release \
+                            --no-build \
+                            --logger "trx;LogFileName=test-results.trx" \
+                            --results-directory ${TEST_RESULTS_DIR} \
+                            --collect:"XPlat Code Coverage" \
+                            --results-directory ${COVERAGE_DIR}
+                    '''
+                }
+            }
+            post {
+                always {
+                    // Архивиране на test резултати
+                    publishTestResults testResultsPattern: '${TEST_RESULTS_DIR}/**/*.trx'
+                    
+                    // Архивиране на coverage резултати
+                    archiveArtifacts artifacts: '${COVERAGE_DIR}/**/*', fingerprint: true
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            script {
+                echo 'Pipeline завърши с резултат: ' + currentBuild.result
+            }
+        }
+        success {
+            script {
+                echo '✅ Pipeline завърши успешно!'
+                echo '📊 Всички тестове са изпълнени успешно'
+                echo '📈 Отчетите за покритие на кода са генерирани'
+            }
+        }
+        failure {
+            script {
+                echo '❌ Pipeline завърши с грешка!'
+                echo '🔍 Проверете логовете за повече информация'
+            }
+        }
+        unstable {
+            script {
+                echo '⚠️ Pipeline завърши неуспешно (тестове провалени)'
+                echo '🔍 Проверете резултатите от тестовете'
+            }
+        }
+    }
+} 
