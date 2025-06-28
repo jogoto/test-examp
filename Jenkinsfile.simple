@@ -75,7 +75,7 @@ pipeline {
             post {
                 always {
                     // Архивиране на test резултати
-                    publishTestResults testResultsPattern: '${TEST_RESULTS_DIR}/**/*.trx'
+                    junit testResults: '${TEST_RESULTS_DIR}/**/*.trx'
                     
                     // Архивиране на coverage резултати (те се генерират в TestResults директория)
                     archiveArtifacts artifacts: 'TestResults/**/*', fingerprint: true
