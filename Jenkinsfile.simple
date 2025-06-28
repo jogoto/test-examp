@@ -5,6 +5,7 @@ pipeline {
         DOTNET_VERSION = '6.0'
         SOLUTION_FILE = 'HouseRentingSystem.sln'
         TEST_RESULTS_DIR = 'test-results'
+        DOTNET_PATH = '/var/lib/jenkins/.dotnet/dotnet'
     }
     
     stages {
@@ -31,7 +32,7 @@ pipeline {
                         rm -rf test-results TestResults 2>/dev/null || true
                         
                         # Възстановяване на зависимостите
-                        dotnet restore ${SOLUTION_FILE}
+                        ${DOTNET_PATH} restore ${SOLUTION_FILE}
                     '''
                 }
             }
@@ -41,7 +42,7 @@ pipeline {
             steps {
                 script {
                     echo 'Компилиране на решението...'
-                    sh 'dotnet build ${SOLUTION_FILE} --configuration Release --no-restore'
+                    sh '${DOTNET_PATH} build ${SOLUTION_FILE} --configuration Release --no-restore'
                 }
             }
             post {
@@ -62,7 +63,7 @@ pipeline {
                     
                     // Изпълняване на всички тестове с coverage
                     sh '''
-                        dotnet test ${SOLUTION_FILE} \
+                        ${DOTNET_PATH} test ${SOLUTION_FILE} \
                             --configuration Release \
                             --no-build \
                             --logger "trx;LogFileName=test-results.trx" \
